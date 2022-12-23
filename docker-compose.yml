@@ -1,0 +1,57 @@
+version: '3'
+services:
+  auth-server:
+    build: ./nesuedu-auth-server
+    restart: always
+    environment: 
+      - POSTGRES_HOST=postgres-auth
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_NAME=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_TZ=Asia/Tokyo
+      - LISTEN_ON=:8080
+    depends_on:
+      - postgres-auth
+    ports:
+      - "8081:8080"
+  content-server:
+    build: ./nesuedu-content-server
+    restart: always
+    environment: 
+      - POSTGRES_HOST=postgres-content
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_NAME=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_TZ=Asia/Tokyo
+      - LISTEN_ON=:8080
+    depends_on:
+      - postgres-content
+    ports:
+      - "8082:8080"
+  backend-server:
+    build: ./nesuedu-backend-server
+    environment:
+      - LISTEN_ON=:8080
+      - C_BACKEND_URL=http://content-server:8080/
+      - A_BACKEND_URL=http://auth-server:8080/
+    depends_on:
+      - auth-server
+      - content-server
+    ports:
+      - "8083:8080"
+  postgres-content:
+    image: postgres:14.1-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+  postgres-auth:
+    image: postgres:14.1-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432"
